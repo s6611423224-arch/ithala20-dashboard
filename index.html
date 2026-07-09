@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ITHALA20 Smart Weather Station</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1>🌦️ ITHALA20 Smart Weather Station</h1>
+      <p id="last-update">กำลังโหลด...</p>
+    </div>
+    <div class="header-right">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">กำลังเชื่อมต่อ...</span>
+    </div>
+  </header>
+
+  <!-- การ์ดค่าปัจจุบัน -->
+  <section class="cards">
+    <div class="card">
+      <div class="card-icon">🌡️</div>
+      <div class="card-label">อุณหภูมิ</div>
+      <div class="card-value" id="val-temp">--</div>
+      <div class="card-unit">°C</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">💧</div>
+      <div class="card-label">ความชื้น</div>
+      <div class="card-value" id="val-hum">--</div>
+      <div class="card-unit">%</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">☀️</div>
+      <div class="card-label">ความสว่าง</div>
+      <div class="card-value" id="val-lux">--</div>
+      <div class="card-unit">lux</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔆</div>
+      <div class="card-label">UV Index</div>
+      <div class="card-value" id="val-uv">--</div>
+      <div class="card-unit">raw</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌧️</div>
+      <div class="card-label">สัญญาณฝน</div>
+      <div class="card-value" id="val-rain">--</div>
+      <div class="card-unit">raw</div>
+    </div>
+  </section>
+
+  <!-- กราฟ -->
+  <section class="chart-box">
+    <h2>🌡️ อุณหภูมิและความชื้น (24 ชั่วโมงล่าสุด)</h2>
+    <canvas id="chart-temp-hum"></canvas>
+  </section>
+
+  <section class="chart-box">
+    <h2>☀️ ความสว่างและ UV (24 ชั่วโมงล่าสุด)</h2>
+    <canvas id="chart-light"></canvas>
+  </section>
+
+  <section class="chart-box">
+    <h2>🌧️ สัญญาณฝน (24 ชั่วโมงล่าสุด)</h2>
+    <canvas id="chart-rain"></canvas>
+  </section>
+
+  <!-- แผนที่ -->
+  <section class="chart-box">
+    <h2>📍 ตำแหน่งสถานี</h2>
+    <div id="map"></div>
+  </section>
+
+  <footer>
+    <p>ITHALA20 Smart Weather Station · ภูเก็ต ประเทศไทย · รีเฟรชทุก 60 วินาที</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
