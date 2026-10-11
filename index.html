@@ -56,6 +56,33 @@
     </div>
   </section>
 
+  <!-- การ์ด AI พยากรณ์ -->
+  <section class="chart-box ai-box">
+    <h2>🤖 AI พยากรณ์อากาศ 1 ชั่วโมงข้างหน้า</h2>
+    <div class="cards" style="padding:0;margin-top:16px">
+      <div class="card ai-card">
+        <div class="card-icon">🌧️</div>
+        <div class="card-label">โอกาสฝนตก</div>
+        <div class="card-value" id="pred-rain-prob" style="font-size:2rem">--%</div>
+        <div class="card-unit" id="pred-rain-label">กำลังโหลด...</div>
+      </div>
+      <div class="card ai-card">
+        <div class="card-icon">🔆</div>
+        <div class="card-label">UV คาดการณ์</div>
+        <div class="card-value" id="pred-uv" style="font-size:2rem">--</div>
+        <div class="card-unit">UV Index</div>
+      </div>
+      <div class="card ai-card" style="flex:2">
+        <div class="card-icon">💡</div>
+        <div class="card-label">คำแนะนำ</div>
+        <div class="card-value" id="pred-advice"
+          style="font-size:1rem;line-height:1.4">--</div>
+      </div>
+    </div>
+    <div id="alert-box" style="display:none;margin-top:16px;padding:12px 16px;
+      border-radius:8px;font-size:14px"></div>
+  </section>
+
   <!-- กราฟ -->
   <section class="chart-box">
     <h2>🌡️ อุณหภูมิและความชื้น (24 ชั่วโมงล่าสุด)</h2>
