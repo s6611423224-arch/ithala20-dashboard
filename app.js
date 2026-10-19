@@ -59,21 +59,18 @@ function updateCards(latest) {
 // ===== อัปเดตการ์ด AI =====
 function updatePrediction(pred) {
   if (!pred) return;
-
   const prob = pred.rain_probability;
   document.getElementById('pred-rain-prob').textContent  = `${prob}%`;
   document.getElementById('pred-rain-label').textContent = pred.rain_label;
   document.getElementById('pred-uv').textContent         = pred.uv_index;
   document.getElementById('pred-advice').textContent     = pred.advice;
 
-  // สีการ์ดตามโอกาสฝน
   const cards = document.querySelectorAll('.ai-card');
   cards.forEach(c => {
     c.style.borderColor = prob >= 70 ? '#38bdf8' : '#4a5568';
     c.style.background  = prob >= 70 ? 'rgba(56,189,248,0.08)' : '';
   });
 
-  // แถบเตือน
   const alertBox = document.getElementById('alert-box');
   const alerts = [];
   if (prob >= 70) alerts.push('🌧️ มีโอกาสฝนตกสูง ควรเตรียมร่ม');
@@ -108,8 +105,7 @@ const CHART_DEFAULTS = {
   scales: {
     x: {
       type: 'time',
-      time: { tooltipFormat: 'HH:mm dd/MM',
-        displayFormats: { hour: 'HH:mm' } },
+      time: { tooltipFormat: 'HH:mm dd/MM', displayFormats: { hour: 'HH:mm' } },
       ticks: { color: '#64748b', maxTicksLimit: 8 },
       grid:  { color: '#1e3a5f22' }
     },
@@ -128,7 +124,7 @@ function upsertChart(id, labels, datasets, extraScales = {}) {
   if (charts[id]) {
     charts[id].data.labels   = labels;
     charts[id].data.datasets = datasets;
-    if (extraScales.y1) charts[id].options.scales.y1 = extraScales.y1;
+    Object.assign(charts[id].options.scales, extraScales);
     charts[id].update('none');
     return;
   }
@@ -138,7 +134,7 @@ function upsertChart(id, labels, datasets, extraScales = {}) {
 function renderCharts(rows) {
   const labels = rows.map(r => new Date(r.created_at));
 
-  // กราฟ 1: อุณหภูมิ + ความชื้น
+  // ── กราฟ 1: อุณหภูมิ + ความชื้น (2 แกน Y) ──
   upsertChart('chart-temp-hum', labels, [
     {
       label: 'อุณหภูมิ (°C)',
@@ -153,31 +149,50 @@ function renderCharts(rows) {
       tension: 0.3, yAxisID: 'y1',
     }
   ], {
-    y:  { ticks: { color: '#64748b' }, grid: { color: '#33415533' },
-      title: { display: true, text: '°C', color: '#f87171' } },
-    y1: { position: 'right', ticks: { color: '#38bdf8' },
-      grid: { drawOnChartArea: false },
-      title: { display: true, text: '%', color: '#38bdf8' } },
-    x:  CHART_DEFAULTS.scales.x,
+    y: {
+      ticks: { color: '#64748b' },
+      grid:  { color: '#33415533' },
+      title: { display: true, text: '°C', color: '#f87171' }
+    },
+    y1: {
+      position: 'right',
+      ticks:    { color: '#38bdf8' },
+      grid:     { drawOnChartArea: false },
+      title:    { display: true, text: '%', color: '#38bdf8' }
+    },
+    x: CHART_DEFAULTS.scales.x,
   });
 
-  // กราฟ 2: แสง + UV
+  // ── กราฟ 2: แสง + UV (แยก Y-axis เพื่อให้เห็น UV ชัดขึ้น) ──
   upsertChart('chart-light', labels, [
     {
       label: 'ความสว่าง (lux)',
       data: rows.map(r => r.light_lux),
       borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.08)',
-      tension: 0.3,
+      tension: 0.3, yAxisID: 'y',
     },
     {
       label: 'UV raw',
       data: rows.map(r => r.uv_raw),
       borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.08)',
-      tension: 0.3,
+      tension: 0.3, yAxisID: 'y1',
     }
-  ]);
+  ], {
+    y: {
+      ticks: { color: '#64748b' },
+      grid:  { color: '#33415533' },
+      title: { display: true, text: 'lux', color: '#fbbf24' }
+    },
+    y1: {
+      position: 'right',
+      ticks:    { color: '#a78bfa' },
+      grid:     { drawOnChartArea: false },
+      title:    { display: true, text: 'UV raw', color: '#a78bfa' }
+    },
+    x: CHART_DEFAULTS.scales.x,
+  });
 
-  // กราฟ 3: ฝน
+  // ── กราฟ 3: ฝน ──
   upsertChart('chart-rain', labels, [
     {
       label: 'สัญญาณฝน (raw) — ยิ่งต่ำ = เปียกมากขึ้น',
@@ -220,7 +235,6 @@ async function refresh() {
     renderCharts(rows);
     setStatus(true);
 
-    // AI พยากรณ์
     const pred = await fetchPrediction(latest);
     updatePrediction(pred);
 
