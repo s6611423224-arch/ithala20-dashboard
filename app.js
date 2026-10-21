@@ -7,7 +7,6 @@ const STATION_LNG   = 98.3923;
 const REFRESH_MS    = 60 * 1000;
 const AI_API_URL    = 'https://ithala20-ai-api.onrender.com';
 
-// ===== ดึงข้อมูลเซนเซอร์ =====
 async function fetchReadings(limit = 100) {
   const url = `${SUPABASE_URL}/rest/v1/sensor_readings`
     + `?station_id=eq.${STATION_ID}`
@@ -24,7 +23,6 @@ async function fetchReadings(limit = 100) {
   return data.reverse();
 }
 
-// ===== ดึงผลพยากรณ์ AI =====
 async function fetchPrediction(latest) {
   try {
     const res = await fetch(`${AI_API_URL}/predict`, {
@@ -45,7 +43,6 @@ async function fetchPrediction(latest) {
   }
 }
 
-// ===== อัปเดตการ์ดค่าปัจจุบัน =====
 function updateCards(latest) {
   document.getElementById('val-temp').textContent  = latest.temperature?.toFixed(1) ?? '--';
   document.getElementById('val-hum').textContent   = latest.humidity?.toFixed(1)    ?? '--';
@@ -56,7 +53,6 @@ function updateCards(latest) {
   document.getElementById('last-update').textContent = `อัปเดตล่าสุด: ${t}`;
 }
 
-// ===== อัปเดตการ์ด AI =====
 function updatePrediction(pred) {
   if (!pred) return;
   const prob = pred.rain_probability;
@@ -87,7 +83,6 @@ function updatePrediction(pred) {
   }
 }
 
-// ===== Status dot =====
 function setStatus(online) {
   const dot  = document.getElementById('status-dot');
   const text = document.getElementById('status-text');
@@ -95,7 +90,6 @@ function setStatus(online) {
   text.textContent = online ? 'ออนไลน์' : 'ออฟไลน์';
 }
 
-// ===== กราฟ =====
 const charts = {};
 
 const CHART_DEFAULTS = {
@@ -134,7 +128,7 @@ function upsertChart(id, labels, datasets, extraScales = {}) {
 function renderCharts(rows) {
   const labels = rows.map(r => new Date(r.created_at));
 
-  // ── กราฟ 1: อุณหภูมิ + ความชื้น (2 แกน Y) ──
+  // ── กราฟ 1: อุณหภูมิ + ความชื้น ──
   upsertChart('chart-temp-hum', labels, [
     {
       label: 'อุณหภูมิ (°C)',
@@ -163,34 +157,24 @@ function renderCharts(rows) {
     x: CHART_DEFAULTS.scales.x,
   });
 
-  // ── กราฟ 2: แสง + UV (แยก Y-axis เพื่อให้เห็น UV ชัดขึ้น) ──
+  // ── กราฟ 2: แสง + UV (normalize UV ให้เห็นชัดขึ้น) ──
+  const maxLux = Math.max(...rows.map(r => r.light_lux || 0)) || 4095;
+  const scale  = maxLux / 4095;
+
   upsertChart('chart-light', labels, [
     {
       label: 'ความสว่าง (lux)',
       data: rows.map(r => r.light_lux),
       borderColor: '#fbbf24', backgroundColor: 'rgba(251,191,36,0.08)',
-      tension: 0.3, yAxisID: 'y',
+      tension: 0.3,
     },
     {
-      label: 'UV raw',
-      data: rows.map(r => r.uv_raw),
+      label: `UV raw (×${scale.toFixed(1)})`,
+      data: rows.map(r => r.uv_raw * scale),
       borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.08)',
-      tension: 0.3, yAxisID: 'y1',
+      tension: 0.3,
     }
-  ], {
-    y: {
-      ticks: { color: '#64748b' },
-      grid:  { color: '#33415533' },
-      title: { display: true, text: 'lux', color: '#fbbf24' }
-    },
-    y1: {
-      position: 'right',
-      ticks:    { color: '#a78bfa' },
-      grid:     { drawOnChartArea: false },
-      title:    { display: true, text: 'UV raw', color: '#a78bfa' }
-    },
-    x: CHART_DEFAULTS.scales.x,
-  });
+  ]);
 
   // ── กราฟ 3: ฝน ──
   upsertChart('chart-rain', labels, [
@@ -203,7 +187,6 @@ function renderCharts(rows) {
   ]);
 }
 
-// ===== แผนที่ =====
 let map = null;
 
 function initMap() {
@@ -224,7 +207,6 @@ function initMap() {
     .openPopup();
 }
 
-// ===== Main Refresh =====
 async function refresh() {
   try {
     const rows = await fetchReadings(100);
