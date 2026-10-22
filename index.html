@@ -7,10 +7,11 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
 <body>
+
   <header>
     <div class="header-left">
       <h1>🌦️ ITHALA20 Smart Weather Station</h1>
@@ -22,91 +23,272 @@
     </div>
   </header>
 
-  <!-- การ์ดค่าปัจจุบัน -->
-  <section class="cards">
-    <div class="card">
-      <div class="card-icon">🌡️</div>
-      <div class="card-label">อุณหภูมิ</div>
-      <div class="card-value" id="val-temp">--</div>
-      <div class="card-unit">°C</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">💧</div>
-      <div class="card-label">ความชื้น</div>
-      <div class="card-value" id="val-hum">--</div>
-      <div class="card-unit">%</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">☀️</div>
-      <div class="card-label">ความสว่าง</div>
-      <div class="card-value" id="val-lux">--</div>
-      <div class="card-unit">lux</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">🔆</div>
-      <div class="card-label">UV Index</div>
-      <div class="card-value" id="val-uv">--</div>
-      <div class="card-unit">raw</div>
-    </div>
-    <div class="card">
-      <div class="card-icon">🌧️</div>
-      <div class="card-label">สัญญาณฝน</div>
-      <div class="card-value" id="val-rain">--</div>
-      <div class="card-unit">raw</div>
-    </div>
-  </section>
+  <!-- Tab Navigation -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('realtime',this)">📡 เรียลไทม์</button>
+    <button class="tab-btn" onclick="switchTab('daily',this)">📅 สรุปรายวัน</button>
+    <button class="tab-btn" onclick="switchTab('model',this)">🤖 ประสิทธิภาพโมเดล</button>
+  </nav>
 
-  <!-- การ์ด AI พยากรณ์ -->
-  <section class="chart-box ai-box">
-    <h2>🤖 AI พยากรณ์อากาศ 1 ชั่วโมงข้างหน้า</h2>
-    <div class="cards" style="padding:0;margin-top:16px">
-      <div class="card ai-card">
-        <div class="card-icon">🌧️</div>
-        <div class="card-label">โอกาสฝนตก</div>
-        <div class="card-value" id="pred-rain-prob" style="font-size:2rem">--%</div>
-        <div class="card-unit" id="pred-rain-label">กำลังโหลด...</div>
+  <!-- ════ TAB 1: REALTIME ════ -->
+  <div id="tab-realtime" class="tab-content active">
+
+    <section class="cards">
+      <div class="card">
+        <div class="card-icon">🌡️</div>
+        <div class="card-label">อุณหภูมิ</div>
+        <div class="card-value" id="val-temp">--</div>
+        <div class="card-unit">°C</div>
       </div>
-      <div class="card ai-card">
+      <div class="card">
+        <div class="card-icon">💧</div>
+        <div class="card-label">ความชื้น</div>
+        <div class="card-value" id="val-hum">--</div>
+        <div class="card-unit">%</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">☀️</div>
+        <div class="card-label">ความสว่าง</div>
+        <div class="card-value" id="val-lux">--</div>
+        <div class="card-unit">lux</div>
+      </div>
+      <div class="card">
         <div class="card-icon">🔆</div>
-        <div class="card-label">UV คาดการณ์</div>
-        <div class="card-value" id="pred-uv" style="font-size:2rem">--</div>
-        <div class="card-unit">UV Index</div>
+        <div class="card-label">UV Index</div>
+        <div class="card-value" id="val-uv">--</div>
+        <div class="card-unit">raw</div>
       </div>
-      <div class="card ai-card" style="flex:2">
-        <div class="card-icon">💡</div>
-        <div class="card-label">คำแนะนำ</div>
-        <div class="card-value" id="pred-advice"
-          style="font-size:1rem;line-height:1.4">--</div>
+      <div class="card">
+        <div class="card-icon">🌧️</div>
+        <div class="card-label">สัญญาณฝน</div>
+        <div class="card-value" id="val-rain">--</div>
+        <div class="card-unit">raw</div>
       </div>
-    </div>
-    <div id="alert-box" style="display:none;margin-top:16px;padding:12px 16px;
-      border-radius:8px;font-size:14px"></div>
-  </section>
+    </section>
 
-  <!-- กราฟ -->
-  <section class="chart-box">
-    <h2>🌡️ อุณหภูมิและความชื้น (24 ชั่วโมงล่าสุด)</h2>
-    <canvas id="chart-temp-hum"></canvas>
-  </section>
+    <!-- AI Prediction -->
+    <section class="chart-box ai-box">
+      <h2>🤖 AI พยากรณ์อากาศ 1 ชั่วโมงข้างหน้า</h2>
+      <div class="cards" style="padding:0;margin-top:16px">
+        <div class="card ai-card">
+          <div class="card-icon">🌧️</div>
+          <div class="card-label">โอกาสฝนตก</div>
+          <div class="card-value" id="pred-rain-prob" style="font-size:2rem">--%</div>
+          <div class="card-unit" id="pred-rain-label">กำลังโหลด...</div>
+        </div>
+        <div class="card ai-card">
+          <div class="card-icon">🔆</div>
+          <div class="card-label">UV คาดการณ์</div>
+          <div class="card-value" id="pred-uv" style="font-size:2rem">--</div>
+          <div class="card-unit">UV Index</div>
+        </div>
+        <div class="card ai-card" style="flex:2">
+          <div class="card-icon">💡</div>
+          <div class="card-label">คำแนะนำ</div>
+          <div class="card-value" id="pred-advice" style="font-size:1rem;line-height:1.4">--</div>
+        </div>
+      </div>
+      <div id="alert-box" style="display:none;margin-top:16px;padding:12px 16px;border-radius:8px;font-size:14px"></div>
+    </section>
 
-  <section class="chart-box">
-    <h2>☀️ ความสว่างและ UV (24 ชั่วโมงล่าสุด)</h2>
-    <canvas id="chart-light"></canvas>
-  </section>
+    <section class="chart-box">
+      <h2>🌡️ อุณหภูมิและความชื้น (100 ค่าล่าสุด)</h2>
+      <canvas id="chart-temp-hum"></canvas>
+    </section>
+    <section class="chart-box">
+      <h2>☀️ ความสว่างและ UV (100 ค่าล่าสุด)</h2>
+      <canvas id="chart-light"></canvas>
+    </section>
+    <section class="chart-box">
+      <h2>🌧️ สัญญาณฝน (100 ค่าล่าสุด)</h2>
+      <canvas id="chart-rain"></canvas>
+    </section>
+    <section class="chart-box">
+      <h2>📍 ตำแหน่งสถานี</h2>
+      <div id="map"></div>
+    </section>
 
-  <section class="chart-box">
-    <h2>🌧️ สัญญาณฝน (24 ชั่วโมงล่าสุด)</h2>
-    <canvas id="chart-rain"></canvas>
-  </section>
+  </div><!-- /tab-realtime -->
 
-  <!-- แผนที่ -->
-  <section class="chart-box">
-    <h2>📍 ตำแหน่งสถานี</h2>
-    <div id="map"></div>
-  </section>
+  <!-- ════ TAB 2: DAILY SUMMARY ════ -->
+  <div id="tab-daily" class="tab-content">
+    <section class="chart-box">
+      <div class="daily-header">
+        <h2>📅 สรุปข้อมูลรายวัน</h2>
+        <div class="date-picker-row">
+          <label>เลือกวันที่:</label>
+          <input type="date" id="daily-date" onchange="loadDailySummary()">
+          <button class="btn-load" onclick="loadDailySummary()">🔍 โหลดข้อมูล</button>
+          <button class="btn-export" onclick="exportDailyCSV()" id="btn-export-daily" style="display:none">⬇️ Export CSV</button>
+        </div>
+      </div>
+
+      <div id="daily-loading" class="loading-msg" style="display:none">⏳ กำลังโหลดข้อมูล...</div>
+      <div id="daily-empty"   class="empty-msg"   style="display:none">📭 ไม่มีข้อมูลในวันที่เลือก</div>
+
+      <div id="daily-content" style="display:none">
+
+        <!-- summary cards -->
+        <div class="summary-grid" id="daily-cards"></div>
+
+        <!-- charts -->
+        <div class="chart-box inner-box" style="margin-top:20px">
+          <h2>🌡️ อุณหภูมิและความชื้น</h2>
+          <canvas id="daily-chart-th"></canvas>
+        </div>
+        <div class="chart-box inner-box" style="margin-top:16px">
+          <h2>☀️ ความสว่างและ UV</h2>
+          <canvas id="daily-chart-uv"></canvas>
+        </div>
+        <div class="chart-box inner-box" style="margin-top:16px">
+          <h2>🌧️ สัญญาณฝน</h2>
+          <canvas id="daily-chart-rain"></canvas>
+        </div>
+
+        <!-- stats summary table -->
+        <div class="chart-box inner-box" style="margin-top:16px">
+          <h2>📊 ตารางสรุปค่าสถิติประจำวัน</h2>
+          <div class="table-wrap">
+            <table class="stat-table">
+              <thead>
+                <tr>
+                  <th>พารามิเตอร์</th>
+                  <th>ค่าต่ำสุด</th>
+                  <th>ค่าเฉลี่ย</th>
+                  <th>ค่าสูงสุด</th>
+                  <th>หน่วย</th>
+                </tr>
+              </thead>
+              <tbody id="daily-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ★ NEW: hourly breakdown table -->
+        <div class="chart-box inner-box" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h2 style="margin:0">🕐 สรุปรายชั่วโมง</h2>
+            <span class="table-note">ค่าเฉลี่ยต่อชั่วโมง · 🌧 = มีฝน (rain raw &lt; 2000)</span>
+          </div>
+          <div class="table-wrap">
+            <table class="stat-table" id="hourly-table">
+              <thead>
+                <tr>
+                  <th>ชั่วโมง</th>
+                  <th>อุณหภูมิ (°C)</th>
+                  <th>ความชื้น (%)</th>
+                  <th>แสง (lux)</th>
+                  <th>UV raw</th>
+                  <th>Rain raw (เฉลี่ย)</th>
+                  <th>สภาพฝน</th>
+                  <th>ค่าบันทึก</th>
+                </tr>
+              </thead>
+              <tbody id="hourly-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /daily-content -->
+    </section>
+  </div><!-- /tab-daily -->
+
+  <!-- ════ TAB 3: MODEL PERFORMANCE ════ -->
+  <div id="tab-model" class="tab-content">
+    <section class="chart-box">
+      <div class="daily-header">
+        <h2>🤖 ประสิทธิภาพและผลพยากรณ์ของโมเดล</h2>
+        <div class="date-picker-row">
+          <label>เลือกวันที่:</label>
+          <input type="date" id="model-date" onchange="loadModelPerf()">
+          <button class="btn-load" onclick="loadModelPerf()">🔍 โหลดข้อมูล</button>
+          <button class="btn-export" onclick="exportModelCSV()" id="btn-export-model" style="display:none">⬇️ Export CSV</button>
+        </div>
+      </div>
+
+      <!-- Model Metrics (static from training) -->
+      <div class="model-metrics">
+        <div class="metric-card">
+          <div class="metric-label">Accuracy</div>
+          <div class="metric-value" style="color:#34d399">99.1%</div>
+          <div class="metric-sub">Random Forest</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">F1-Score</div>
+          <div class="metric-value" style="color:#38bdf8">0.963</div>
+          <div class="metric-sub">Rain Classification</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Training Data</div>
+          <div class="metric-value" style="color:#fbbf24">50,976</div>
+          <div class="metric-sub">แถวข้อมูล</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Rain Events</div>
+          <div class="metric-value" style="color:#f87171">12.6%</div>
+          <div class="metric-sub">6,423 ครั้ง</div>
+        </div>
+      </div>
+
+      <!-- Feature Importance chart -->
+      <div class="chart-box inner-box" style="margin-top:20px">
+        <h2>📊 Feature Importance (จากการ Train)</h2>
+        <canvas id="chart-feature" style="max-height:300px"></canvas>
+      </div>
+
+      <!-- Daily accuracy summary -->
+      <div id="model-loading" class="loading-msg" style="display:none">⏳ กำลังโหลดและเรียก AI API...</div>
+      <div id="model-empty"   class="empty-msg"   style="display:none">📭 ไม่มีข้อมูลในวันที่เลือก</div>
+
+      <div id="model-content" style="display:none">
+
+        <!-- ★ NEW: daily accuracy summary cards -->
+        <div class="chart-box inner-box" style="margin-top:20px">
+          <h2>📈 สรุปผลความแม่นยำของวันที่เลือก</h2>
+          <div class="summary-grid" id="model-day-cards"></div>
+        </div>
+
+        <!-- prediction vs actual chart -->
+        <div class="chart-box inner-box" style="margin-top:16px">
+          <h2>🌧️ โอกาสฝนตก AI vs ค่าจริง (รายชั่วโมง)</h2>
+          <canvas id="model-chart-rain"></canvas>
+        </div>
+
+        <!-- ★ ENHANCED prediction table -->
+        <div class="chart-box inner-box" style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <h2 style="margin:0">📋 ตารางผลพยากรณ์รายชั่วโมง</h2>
+            <div style="display:flex;gap:8px;align-items:center;font-size:.78rem;color:#64748b">
+              <span style="background:rgba(52,211,153,.15);color:#34d399;padding:2px 8px;border-radius:20px">✓ ถูก</span>
+              <span style="background:rgba(248,113,113,.15);color:#f87171;padding:2px 8px;border-radius:20px">✗ ผิด</span>
+              <span style="background:rgba(56,189,248,.15);color:#38bdf8;padding:2px 8px;border-radius:20px">🌧 มีฝน</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="stat-table">
+              <thead>
+                <tr>
+                  <th>เวลา</th>
+                  <th>อุณหภูมิ</th>
+                  <th>ความชื้น</th>
+                  <th>Rain raw</th>
+                  <th>สภาพจริง</th>
+                  <th>โอกาสฝน AI</th>
+                  <th>ผลพยากรณ์</th>
+                  <th>ถูก/ผิด</th>
+                </tr>
+              </thead>
+              <tbody id="model-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /model-content -->
+    </section>
+  </div><!-- /tab-model -->
 
   <footer>
-    <p>ITHALA20 Smart Weather Station · ภูเก็ต ประเทศไทย · รีเฟรชทุก 60 วินาที</p>
+    <p>ITHALA20 Smart Weather Station · ภูเก็ต ประเทศไทย · อัปเดตทุก 60 วินาที</p>
   </footer>
 
   <script src="app.js"></script>
